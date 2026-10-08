@@ -1,5 +1,6 @@
 package com.kito.feature.home.presentation
 
+import com.kito.core.common.util.currentLocalDateTime
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kito.core.datastore.domain.repository.PrefsRepository
@@ -86,7 +87,8 @@ class HomeViewModel(
         }
     }
 
-    private val _day = MutableStateFlow<String>("")
+    // Start on today (HomeScreen keeps it updated) so the timetable resolves before Home is drawn.
+    private val _day = MutableStateFlow(currentLocalDateTime().dayOfWeek.name.take(3))
     val day: StateFlow<String> = _day
     private val nextDay: StateFlow<String> =
         day.map { currentDay ->
@@ -169,7 +171,7 @@ class HomeViewModel(
             }
             .stateIn(
                 viewModelScope,
-                SharingStarted.WhileSubscribed(5_000),
+                SharingStarted.Eagerly,
                 null
             )
 
@@ -186,7 +188,7 @@ class HomeViewModel(
             }
             .stateIn(
                 viewModelScope,
-                SharingStarted.WhileSubscribed(5_000),
+                SharingStarted.Eagerly,
                 emptyList()
             )
 
@@ -203,7 +205,7 @@ class HomeViewModel(
             }
             .stateIn(
                 viewModelScope,
-                SharingStarted.WhileSubscribed(5_000),
+                SharingStarted.Eagerly,
                 emptyList()
             )
 
