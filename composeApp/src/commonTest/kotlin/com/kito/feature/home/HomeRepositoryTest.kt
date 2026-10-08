@@ -5,7 +5,6 @@ import com.kito.testing.eventOrAd
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class HomeRepositoryTest {
@@ -19,12 +18,13 @@ class HomeRepositoryTest {
     }
 
     @Test
-    fun isKhaooGullyEnabled_defaultsFalse() = runTest {
-        assertFalse(FakeHomeRepository().isKhaooGullyEnabled())
+    fun getFeatureFlags_defaultsEmpty() = runTest {
+        assertTrue(FakeHomeRepository().getFeatureFlags().isEmpty())
     }
 
     @Test
-    fun isKhaooGullyEnabled_whenSet_returnsTrue() = runTest {
-        assertTrue(FakeHomeRepository(khaooGullyEnabled = true).isKhaooGullyEnabled())
+    fun getFeatureFlags_whenSet_returnsFlags() = runTest {
+        val flags = mapOf("banner" to true, "utilities" to false)
+        assertEquals(flags, FakeHomeRepository(featureFlags = flags).getFeatureFlags())
     }
 }

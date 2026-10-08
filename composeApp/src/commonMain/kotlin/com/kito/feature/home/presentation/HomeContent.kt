@@ -59,6 +59,7 @@ import com.kito.feature.attendance.domain.model.Attendance
 import com.kito.feature.attendance.presentation.components.AttendanceBarCard
 import com.kito.feature.home.domain.model.EventOrAd
 import com.kito.feature.home.presentation.components.EventAndAdBanner
+import com.kito.feature.home.presentation.components.KhaooGullyBanner
 import com.kito.feature.schedule.domain.model.ScheduleItem
 import com.kito.feature.schedule.presentation.components.ScheduleCard
 import com.kito.feature.settings.presentation.components.LoginDialogBox
@@ -88,7 +89,8 @@ fun HomeContent(
     syncState: SyncUiState,
     loginState: SyncUiState,
     isScheduleEmpty: Boolean,
-    isKhaooGullyEnabled: Boolean,
+    isKhaooGullyBannerEnabled: Boolean,
+    isKhaooGullyUtilityEnabled: Boolean,
     eventsAndAds: List<EventOrAd>,
     kayaConnected: Boolean = false,
     onKayaConnect: suspend (String) -> String? = { null },
@@ -331,13 +333,55 @@ fun HomeContent(
                             ) {
                                 UtilityCard(
                                     onCLick = onNavigateToUtility,
-                                    isKhaooGullyEnabled = isKhaooGullyEnabled
+                                    isKhaooGullyEnabled = isKhaooGullyUtilityEnabled
                                 )
                             }
                         }
 
                         item {
                             Spacer(Modifier.height(8.dp))
+                        }
+
+                        if (isKhaooGullyBannerEnabled) {
+                            item {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .padding(horizontal = 12.dp)
+                                ) {
+                                    Text(
+                                        text = "KhaooGully",
+                                        color = uiColors.textPrimary,
+                                        fontWeight = FontWeight.Bold,
+                                        fontFamily = FontFamily.Monospace,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                }
+                            }
+
+                            item {
+                                Spacer(Modifier.height(8.dp))
+                            }
+
+                            item {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 12.dp)
+                                ) {
+                                    KhaooGullyBanner(
+                                        onClick = { url ->
+                                            haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
+                                            onOpenUrl(url)
+                                        }
+                                    )
+                                }
+                            }
+
+                            item {
+                                Spacer(Modifier.height(8.dp))
+                            }
                         }
 
                         if (eventsAndAds.isNotEmpty()) {
@@ -522,7 +566,8 @@ private fun HomeContentPreview() {
         syncState = SyncUiState.Idle,
         loginState = SyncUiState.Idle,
         isScheduleEmpty = false,
-        isKhaooGullyEnabled = true,
+        isKhaooGullyBannerEnabled = true,
+        isKhaooGullyUtilityEnabled = true,
         eventsAndAds = emptyList(),
         onNavigateToSchedule = {},
         onNavigateToAttendance = {},

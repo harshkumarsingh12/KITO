@@ -24,8 +24,7 @@ class HomeRepositoryImpl(
         return response.map { it.toDomain() }.shuffled()
     }
 
-    override suspend fun isKhaooGullyEnabled(): Boolean {
-        val response = client.get("rest/v1/feature_flag").body<List<FeatureFlagModel>>()
-        return response.firstOrNull()?.isEnabled ?: false
-    }
+    override suspend fun getFeatureFlags(): Map<String, Boolean> =
+        client.get("rest/v1/feature_flag").body<List<FeatureFlagModel>>()
+            .associate { it.feature_name to it.isEnabled }
 }

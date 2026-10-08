@@ -11,6 +11,6 @@ interface HomeRepository {
     /** Returns a shuffled list of active events and ads. */
     suspend fun getEventsAndAds(): List<EventOrAd>
 
-    /** Returns whether the KhaooGully feature is enabled. */
-    suspend fun isKhaooGullyEnabled(): Boolean
+    /** Returns the `feature_flag` table as feature_name -> isEnabled. */
+    suspend fun getFeatureFlags(): Map<String, Boolean>
 }
