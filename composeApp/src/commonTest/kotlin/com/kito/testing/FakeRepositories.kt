@@ -106,10 +106,10 @@ class FakeFriendViewRepository(
 
 class FakeHomeRepository(
     private val events: List<EventOrAd> = emptyList(),
-    private val khaooGullyEnabled: Boolean = false,
+    private val featureFlags: Map<String, Boolean> = emptyMap(),
 ) : HomeRepository {
     override suspend fun getEventsAndAds(): List<EventOrAd> = events
-    override suspend fun isKhaooGullyEnabled(): Boolean = khaooGullyEnabled
+    override suspend fun getFeatureFlags(): Map<String, Boolean> = featureFlags
 }
 
 class FakeCalendarRepository(private val events: List<CalendarEvent> = emptyList()) : CalendarRepository {

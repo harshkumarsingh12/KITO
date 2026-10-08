@@ -48,8 +48,10 @@ class HomeViewModel(
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = ""
     )
-    private val _isKhaooGullyEnabled = MutableStateFlow<Boolean>(false)
-    val isKhaooGullyEnabled = _isKhaooGullyEnabled.asStateFlow()
+    private val _isKhaooGullyBannerEnabled = MutableStateFlow(false)
+    val isKhaooGullyBannerEnabled = _isKhaooGullyBannerEnabled.asStateFlow()
+    private val _isKhaooGullyUtilityEnabled = MutableStateFlow(false)
+    val isKhaooGullyUtilityEnabled = _isKhaooGullyUtilityEnabled.asStateFlow()
     private val _ads = MutableStateFlow<List<EventOrAd>>(emptyList())
     val ads: StateFlow<List<EventOrAd>> = _ads.asStateFlow()
 
@@ -66,13 +68,10 @@ class HomeViewModel(
 
     private fun fetchFeatureFlag() {
         viewModelScope.launch(dispatcher) {
-            runCatching {
-                homeRepository.isKhaooGullyEnabled()
-            }.onSuccess { enabled ->
-                _isKhaooGullyEnabled.value = enabled
-            }.onFailure {
-                _isKhaooGullyEnabled.value = false
-            }
+            // feature_name values in the Supabase `feature_flag` table; missing row or error = hidden
+            val flags = runCatching { homeRepository.getFeatureFlags() }.getOrDefault(emptyMap())
+            _isKhaooGullyBannerEnabled.value = flags["banner"] == true
+            _isKhaooGullyUtilityEnabled.value = flags["utilities"] == true
         }
     }
 

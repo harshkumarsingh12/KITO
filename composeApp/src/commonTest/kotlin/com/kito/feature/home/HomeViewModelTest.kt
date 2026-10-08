@@ -97,21 +97,27 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun khaooGullyEnabled_falseByDefault() = runTest(testDispatcher) {
-        val v = vm(FakeHomeRepository(khaooGullyEnabled = false))
-        val job = launch { v.isKhaooGullyEnabled.collect {} }
+    fun khaooGullyFlags_noRows_bothHidden() = runTest(testDispatcher) {
+        val v = vm(FakeHomeRepository())
         advanceUntilIdle()
-        assertFalse(v.isKhaooGullyEnabled.value)
-        job.cancel()
+        assertFalse(v.isKhaooGullyBannerEnabled.value)
+        assertFalse(v.isKhaooGullyUtilityEnabled.value)
     }
 
     @Test
-    fun khaooGullyEnabled_trueWhenRepoEnabled() = runTest(testDispatcher) {
-        val v = vm(FakeHomeRepository(khaooGullyEnabled = true))
-        val job = launch { v.isKhaooGullyEnabled.collect {} }
+    fun khaooGullyFlags_bannerOnly_onlyBannerShown() = runTest(testDispatcher) {
+        val v = vm(FakeHomeRepository(featureFlags = mapOf("banner" to true, "utilities" to false)))
         advanceUntilIdle()
-        assertTrue(v.isKhaooGullyEnabled.value)
-        job.cancel()
+        assertTrue(v.isKhaooGullyBannerEnabled.value)
+        assertFalse(v.isKhaooGullyUtilityEnabled.value)
+    }
+
+    @Test
+    fun khaooGullyFlags_utilitiesOnly_onlyUtilityShown() = runTest(testDispatcher) {
+        val v = vm(FakeHomeRepository(featureFlags = mapOf("utilities" to true)))
+        advanceUntilIdle()
+        assertFalse(v.isKhaooGullyBannerEnabled.value)
+        assertTrue(v.isKhaooGullyUtilityEnabled.value)
     }
 
     @Test
