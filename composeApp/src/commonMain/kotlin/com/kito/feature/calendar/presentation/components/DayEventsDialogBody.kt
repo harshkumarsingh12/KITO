@@ -1,9 +1,11 @@
 package com.kito.feature.calendar.presentation.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -11,7 +13,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
@@ -67,6 +70,7 @@ fun DayEventsDialogBody(
         modifier = Modifier
             .fillMaxWidth()
             .semantics { testTag = "day_dialog" }
+            .staggeredEntrance(enabled = enableAnimations, fromScale = 0.92f, offset = 24.dp)
             .shadow(elevation = 24.dp, spotColor = uiColors.progressAccent)
             .clip(RoundedCornerShape(24.dp))
             .border(
@@ -91,6 +95,18 @@ fun DayEventsDialogBody(
             color = uiColors.textPrimary,
             style = MaterialTheme.typography.titleMediumEmphasized,
         )
+        if (sections.isNotEmpty()) {
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.padding(vertical = 6.dp)) {
+                sections.forEach { (_, items) ->
+                    Box(
+                        Modifier
+                            .size(width = 18.dp, height = 4.dp)
+                            .clip(CircleShape)
+                            .background(entryTypeColor(items.first()))
+                    )
+                }
+            }
+        }
         Text(
             text = when (val total = entries.size + classes.size) {
                 0 -> if (isLoadingClasses) "Loading…" else "Nothing scheduled"
@@ -116,7 +132,10 @@ fun DayEventsDialogBody(
                 verticalArrangement = Arrangement.spacedBy(6.dp),
                 modifier = Modifier.heightIn(max = 420.dp).semantics { testTag = "day_dialog_list" }
             ) {
+                var rowIndex = 0
                 sections.forEach { (title, items) ->
+                    val start = rowIndex
+                    rowIndex += items.size
                     item(key = "header_$title") {
                         Text(
                             text = title,
@@ -127,7 +146,9 @@ fun DayEventsDialogBody(
                             modifier = Modifier.padding(top = 6.dp, bottom = 2.dp)
                         )
                     }
-                    items(items, key = { it.id }) { DayEntryRow(it) }
+                    itemsIndexed(items, key = { _, it -> it.id }) { i, entry ->
+                        DayEntryRow(entry, Modifier.staggeredEntrance(start + i + 1, enableAnimations))
+                    }
                 }
                 if (isLoadingClasses) {
                     item(key = "loading_classes") {

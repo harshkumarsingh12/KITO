@@ -16,6 +16,7 @@ fun MonthGrid(
     today: LocalDate,
     onDayClick: (LocalDate) -> Unit,
     modifier: Modifier = Modifier,
+    enableAnimations: Boolean = true,
 ) {
     val cells = remember(monthIndex) { buildMonthCells(monthIndex) }
     Column(modifier = modifier.fillMaxWidth()) {
@@ -28,7 +29,8 @@ fun MonthGrid(
                         isToday = date == today,
                         inMonth = date.monthIndex() == monthIndex,
                         onClick = { onDayClick(date) },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        enableAnimations = enableAnimations,
                     )
                 }
             }

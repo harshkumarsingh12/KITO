@@ -45,11 +45,13 @@ import com.kito.feature.calendar.presentation.components.CalendarTopBar
 import com.kito.feature.calendar.presentation.components.DayEventsDialog
 import com.kito.feature.calendar.presentation.components.MonthPager
 import com.kito.feature.calendar.presentation.components.OfflinePill
-import com.kito.feature.calendar.presentation.components.formatMonthTitle
+import com.kito.feature.calendar.presentation.components.TodayHeroCard
+import com.kito.feature.calendar.presentation.components.staggeredEntrance
 import com.kito.feature.calendar.presentation.components.monthIndex
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.daysUntil
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -65,6 +67,10 @@ fun CalendarContent(
     val pullState = rememberPullToRefreshState()
     val pullOffsetPx = with(LocalDensity.current) { (42.dp * pullState.distanceFraction.coerceIn(0f, 1f)).toPx() }
     val upcoming = state.upcoming
+    val todayCount = state.months[state.today.monthIndex()]?.get(state.today).orEmpty().size
+    val nextHighlight = upcoming.firstOrNull {
+        it.date > state.today && (it.type == CalendarEntryType.EXAM || it.type == CalendarEntryType.HOLIDAY)
+    }
 
     Box(modifier = Modifier.hazeSource(cardHaze)) {
         Box(modifier = Modifier.background(Color(0xFF121116))) {
@@ -84,6 +90,7 @@ fun CalendarContent(
                         .graphicsLayer { translationY = pullOffsetPx }
                         .hazeSource(listHaze)
                         .fillMaxSize()
+                        .semantics { testTag = "calendar_list" }
                         .padding(horizontal = 16.dp),
                 ) {
                     item { Spacer(Modifier.height(20.dp)) }
@@ -94,7 +101,23 @@ fun CalendarContent(
                             }
                         }
                     }
-                    item {
+                    item(key = "today_hero") {
+                        TodayHeroCard(
+                            today = state.today,
+                            todayCount = todayCount,
+                            nextHighlight = nextHighlight,
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
+                                onEvent(CalendarScreenEvent.SelectDate(state.today))
+                            },
+                            enableAnimations = enableAnimations,
+                            modifier = Modifier
+                                .padding(bottom = 10.dp)
+                                .staggeredEntrance(0, enableAnimations)
+                                .semantics { testTag = "calendar_today_hero" }
+                        )
+                    }
+                    item(key = "month_pager") {
                         MonthPager(
                             today = state.today,
                             displayedMonth = state.displayedMonth,
@@ -104,7 +127,10 @@ fun CalendarContent(
                                 haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
                                 onEvent(CalendarScreenEvent.SelectDate(it))
                             },
-                            modifier = Modifier.semantics { testTag = "calendar_grid" }
+                            enableAnimations = enableAnimations,
+                            modifier = Modifier
+                                .staggeredEntrance(1, enableAnimations)
+                                .semantics { testTag = "calendar_grid" }
                         )
                     }
                     item {
@@ -127,7 +153,13 @@ fun CalendarContent(
                                     haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
                                     onEvent(CalendarScreenEvent.SelectDate(entry.date))
                                 },
-                                modifier = Modifier.semantics { testTag = "calendar_agenda_item" }
+                                highlight = index == 0 && entry.type == CalendarEntryType.EXAM &&
+                                    state.today.daysUntil(entry.date) <= 7,
+                                enableAnimations = enableAnimations,
+                                modifier = Modifier
+                                    .animateItem()
+                                    .staggeredEntrance(index + 2, enableAnimations)
+                                    .semantics { testTag = "calendar_agenda_item" }
                             )
                         }
                         state.months.isEmpty() -> item {
@@ -152,7 +184,7 @@ fun CalendarContent(
                 InstagramPullIndicator(pullState = pullState, isRefreshing = state.isRefreshing)
             }
             CalendarTopBar(
-                title = formatMonthTitle(state.displayedMonth),
+                monthIndex = state.displayedMonth,
                 hazeState = listHaze,
                 onToday = { onEvent(CalendarScreenEvent.GoToToday) },
                 onPrevious = { onEvent(CalendarScreenEvent.MonthChanged(state.displayedMonth - 1)) },
