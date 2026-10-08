@@ -1,5 +1,12 @@
 package com.kito.feature.calendar.presentation.components
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -30,7 +37,9 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import com.kito.core.designsystem.ExpressiveEasing
 import com.kito.core.designsystem.UIColors
 import dev.chrisbanes.haze.ExperimentalHazeApi
 import dev.chrisbanes.haze.HazeInputScale
@@ -43,7 +52,7 @@ import dev.chrisbanes.haze.materials.HazeMaterials
 @OptIn(ExperimentalHazeMaterialsApi::class, ExperimentalHazeApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun CalendarTopBar(
-    title: String,
+    monthIndex: Int,
     hazeState: HazeState,
     onToday: () -> Unit,
     onPrevious: () -> Unit,
@@ -64,14 +73,26 @@ fun CalendarTopBar(
     ) {
         Spacer(Modifier.height(16.dp + WindowInsets.statusBars.asPaddingValues().calculateTopPadding()))
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(
-                text = title,
-                fontFamily = FontFamily.Monospace,
-                fontWeight = FontWeight.SemiBold,
-                color = uiColors.textPrimary,
-                style = MaterialTheme.typography.titleLargeEmphasized,
+            // Later months roll up, earlier months roll down.
+            AnimatedContent(
+                targetState = monthIndex,
+                transitionSpec = {
+                    val dir = if (targetState > initialState) 1 else -1
+                    val spec = tween<IntOffset>(350, easing = ExpressiveEasing.Emphasized)
+                    (slideInVertically(spec) { it * dir } + fadeIn(tween(350))) togetherWith
+                        (slideOutVertically(spec) { -it * dir } + fadeOut(tween(200)))
+                },
+                label = "monthTitle",
                 modifier = Modifier.weight(1f)
-            )
+            ) { index ->
+                Text(
+                    text = formatMonthTitle(index),
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.SemiBold,
+                    color = uiColors.textPrimary,
+                    style = MaterialTheme.typography.titleLargeEmphasized,
+                )
+            }
             TopBarButton(Icons.Rounded.Today, "Today", onToday)
             TopBarButton(Icons.Rounded.ChevronLeft, "Previous month", onPrevious)
             TopBarButton(Icons.Rounded.ChevronRight, "Next month", onNext)

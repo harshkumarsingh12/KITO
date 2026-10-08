@@ -26,9 +26,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.kito.core.designsystem.UIColors
+import com.kito.core.designsystem.lavaMeshBackground
 import com.kito.feature.calendar.domain.model.CalendarEntry
 
-/** Upcoming-list card: app gradient card, grouped corners, coloured accent bar. */
+/** Upcoming-list card: app gradient card (or lava mesh when [highlight]), grouped corners, coloured accent bar. */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun AgendaItemCard(
@@ -37,6 +38,8 @@ fun AgendaItemCard(
     count: Int,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    highlight: Boolean = false,
+    enableAnimations: Boolean = true,
 ) {
     val uiColors = UIColors()
     val accent = entryTypeColor(entry)
@@ -49,8 +52,9 @@ fun AgendaItemCard(
         shape = RoundedCornerShape(topStart = top, topEnd = top, bottomStart = bottom, bottomEnd = bottom),
         modifier = modifier.fillMaxWidth()
     ) {
+        // An exam coming up soon gets the molten mesh, like the Exam screen's next-exam card.
         Box(
-            modifier = Modifier.background(
+            modifier = if (highlight) Modifier.lavaMeshBackground(enableAnimations) else Modifier.background(
                 Brush.linearGradient(
                     listOf(uiColors.cardBackground, Color(0xFF2F222F), Color(0xFF2F222F), uiColors.cardBackgroundHigh)
                 )

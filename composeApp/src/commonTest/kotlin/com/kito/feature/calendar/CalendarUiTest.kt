@@ -2,7 +2,9 @@ package com.kito.feature.calendar
 
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.v2.runComposeUiTest
@@ -15,7 +17,6 @@ import com.kito.feature.calendar.presentation.components.monthIndex
 import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.datetime.LocalDate
 import kotlin.test.Test
-import kotlin.test.assertEquals
 
 @OptIn(ExperimentalTestApi::class)
 class CalendarUiTest {
@@ -33,7 +34,17 @@ class CalendarUiTest {
         setContent { CalendarContent(state = loadedState(), onEvent = {}, enableAnimations = false) }
         onNodeWithTag("calendar_grid").assertIsDisplayed()
         onNodeWithText("October 2026").assertIsDisplayed()
-        assertEquals(2, onAllNodesWithTag("calendar_agenda_item").fetchSemanticsNodes().size)
+        // Both agenda items exist (the second may need a scroll now that the hero card sits on top).
+        onNodeWithTag("calendar_list").performScrollToNode(hasTestTag("calendar_agenda_item") and hasText("DBMS Midsem", substring = true))
+        onNodeWithTag("calendar_list").performScrollToNode(hasTestTag("calendar_agenda_item") and hasText("Durga Puja", substring = true))
+    }
+
+    @Test
+    fun calendar_todayHero_showsDateAndCountdown() = runComposeUiTest {
+        setContent { CalendarContent(state = loadedState(), onEvent = {}, enableAnimations = false) }
+        onNodeWithTag("calendar_today_hero").assertIsDisplayed()
+        onNodeWithText("Thursday, 8 October").assertIsDisplayed()
+        onNodeWithText("DBMS Midsem in 4 days").assertIsDisplayed()
     }
 
     @Test
