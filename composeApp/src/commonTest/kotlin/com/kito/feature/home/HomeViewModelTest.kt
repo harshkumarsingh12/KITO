@@ -157,4 +157,10 @@ class HomeViewModelTest {
         assertEquals(true, v.isScheduleEmpty.value)
         job.cancel()
     }
+
+    @Test
+    fun day_startsAsToday_soScheduleResolvesBeforeHomeScreenRuns() = runTest(testDispatcher) {
+        val expected = com.kito.core.common.util.currentLocalDateTime().dayOfWeek.name.take(3)
+        assertEquals(expected, vm().day.value)
+    }
 }
