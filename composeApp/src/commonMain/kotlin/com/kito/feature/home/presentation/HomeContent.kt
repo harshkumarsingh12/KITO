@@ -88,7 +88,7 @@ fun HomeContent(
     nextSchedule: List<ScheduleItem>,
     syncState: SyncUiState,
     loginState: SyncUiState,
-    isScheduleEmpty: Boolean,
+    isScheduleEmpty: Boolean?,
     isKhaooGullyBannerEnabled: Boolean,
     isKhaooGullyUtilityEnabled: Boolean,
     eventsAndAds: List<EventOrAd>,
@@ -117,6 +117,10 @@ fun HomeContent(
         if (scheduleUiState.isManualSchedule) {
             isManualScheduleDialogOpen = false
         }
+    }
+
+    LaunchedEffect(isManualScheduleDialogOpen) {
+        if (isManualScheduleDialogOpen) onScheduleEvent(ScheduleEvent.LoadSections)
     }
 
     if (isManualScheduleDialogOpen) {
@@ -250,7 +254,7 @@ fun HomeContent(
                                         .clickable {
                                             haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
                                             if (kayaConnected) {
-                                                if (isScheduleEmpty) {
+                                                if (isScheduleEmpty == true) {
                                                     isManualScheduleDialogOpen = true
                                                 } else {
                                                     onNavigateToSchedule()
@@ -294,7 +298,7 @@ fun HomeContent(
                                     isScheduleEmpty = isScheduleEmpty,
                                     onCLick = {
                                         haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
-                                        if (isScheduleEmpty) {
+                                        if (isScheduleEmpty == true) {
                                             isManualScheduleDialogOpen = true
                                         } else {
                                             onNavigateToSchedule()

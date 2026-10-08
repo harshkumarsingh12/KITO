@@ -160,18 +160,19 @@ class HomeViewModel(
         }
     }
 
+    /** null until the saved timetable has been read, so "not loaded yet" never looks like "no timetable". */
     @OptIn(ExperimentalCoroutinesApi::class)
-    val isScheduleEmpty: StateFlow<Boolean> =
+    val isScheduleEmpty: StateFlow<Boolean?> =
         prefs.userRollFlow
             .flatMapLatest { roll ->
                 scheduleRepository
                     .getAllSchedule(rollNo = roll)
-                    .map { it.isEmpty() }
+                    .map<List<ScheduleItem>, Boolean?> { it.isEmpty() }
             }
             .stateIn(
                 viewModelScope,
                 SharingStarted.WhileSubscribed(5_000),
-                true
+                null
             )
 
     @OptIn(ExperimentalCoroutinesApi::class)

@@ -11,6 +11,7 @@ import com.kito.testing.FakeConnectivityRepository
 import com.kito.testing.FakeCredentialsRepository
 import com.kito.testing.FakeHomeRepository
 import com.kito.testing.FakeScheduleRepository
+import com.kito.testing.scheduleItem
 import com.kito.testing.FakeSyncUseCase
 import com.kito.testing.eventOrAd
 import kotlinx.coroutines.CoroutineScope
@@ -65,11 +66,14 @@ class HomeViewModelTest {
         }
     }
 
-    private fun vm(homeRepo: FakeHomeRepository = FakeHomeRepository()) = HomeViewModel(
+    private fun vm(
+        homeRepo: FakeHomeRepository = FakeHomeRepository(),
+        scheduleRepo: FakeScheduleRepository = FakeScheduleRepository(),
+    ) = HomeViewModel(
         prefs = prefsRepository,
         credentialsRepository = FakeCredentialsRepository(),
         attendanceRepository = FakeAttendanceRepository(),
-        scheduleRepository = FakeScheduleRepository(),
+        scheduleRepository = scheduleRepo,
         homeRepository = homeRepo,
         appSyncUseCase = FakeSyncUseCase(),
         syncGuard = StartupSyncGuard(),
@@ -127,6 +131,30 @@ class HomeViewModelTest {
         v.onEvent(HomeEvent.UpdateDay("MON"))
         advanceUntilIdle()
         assertEquals("MON", v.day.value)
+        job.cancel()
+    }
+
+    @Test
+    fun isScheduleEmpty_beforeFirstRead_isNullNotEmpty() = runTest(testDispatcher) {
+        // Regression: the card showed "Set up your timetable" while the saved timetable was still loading.
+        assertEquals(null, vm().isScheduleEmpty.value)
+    }
+
+    @Test
+    fun isScheduleEmpty_savedTimetable_false() = runTest(testDispatcher) {
+        val v = vm(scheduleRepo = FakeScheduleRepository(listOf(scheduleItem("OS"))))
+        val job = launch { v.isScheduleEmpty.collect {} }
+        advanceUntilIdle()
+        assertEquals(false, v.isScheduleEmpty.value)
+        job.cancel()
+    }
+
+    @Test
+    fun isScheduleEmpty_nothingSaved_true() = runTest(testDispatcher) {
+        val v = vm()
+        val job = launch { v.isScheduleEmpty.collect {} }
+        advanceUntilIdle()
+        assertEquals(true, v.isScheduleEmpty.value)
         job.cancel()
     }
 }
