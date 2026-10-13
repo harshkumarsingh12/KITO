@@ -18,7 +18,7 @@ class HomeRepositoryImplTest {
     private fun repo(rows: String, lottieStatus: HttpStatusCode = HttpStatusCode.OK, seenQuery: MutableList<String> = mutableListOf()) =
         HomeRepositoryImpl(mockHttpClient { req ->
             if (req.url.encodedPath.endsWith("events_and_ads")) {
-                seenQuery += req.url.parameters["or"].orEmpty()
+                seenQuery += req.url.parameters["platform"].orEmpty()
                 respond(rows, HttpStatusCode.OK, json)
             } else {
                 respond("""{"v":"5.5.7"}""", lottieStatus, json)
@@ -29,10 +29,10 @@ class HomeRepositoryImplTest {
     private val lottieRow = """{"id":2,"media_url":"https://cdn/banner.json","media_type":"lottie","click_url":"https://play"}"""
 
     @Test
-    fun getEventsAndAds_filtersByPlatformOrNull() = runTest {
+    fun getEventsAndAds_filtersByPlatformOrBoth() = runTest {
         val seen = mutableListOf<String>()
         repo("[$imageRow]", seenQuery = seen).getEventsAndAds("android")
-        assertEquals(listOf("(platform.is.null,platform.eq.android)"), seen)
+        assertEquals(listOf("in.(both,android)"), seen)
     }
 
     @Test

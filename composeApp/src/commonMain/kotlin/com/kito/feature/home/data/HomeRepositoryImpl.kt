@@ -21,8 +21,8 @@ class HomeRepositoryImpl(
     override suspend fun getEventsAndAds(platform: String): List<EventOrAd> {
         val response = client.get("rest/v1/events_and_ads") {
             parameter("is_active", "eq.true")
-            // null platform = shown on both
-            parameter("or", "(platform.is.null,platform.eq.$platform)")
+            // 'both' rows show everywhere; 'android'/'ios' rows only on that platform
+            parameter("platform", "in.(both,$platform)")
             parameter("order", "display_order.asc")
         }.body<List<EventAndAdModel>>()
         return response.map { it.toDomain() }
