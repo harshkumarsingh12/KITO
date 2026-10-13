@@ -8,6 +8,7 @@ import com.kito.core.connectivity.domain.repository.ConnectivityRepository
 import com.kito.core.ui.state.SyncUiState
 import com.kito.core.sync.domain.SyncUseCase
 import com.kito.core.auth.domain.repository.CredentialsRepository
+import com.kito.feature.app.presentation.isAndroid
 import com.kito.feature.attendance.domain.model.Attendance
 import com.kito.feature.attendance.domain.repository.AttendanceRepository
 import com.kito.feature.home.domain.model.EventOrAd
@@ -48,8 +49,6 @@ class HomeViewModel(
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = ""
     )
-    private val _isKhaooGullyBannerEnabled = MutableStateFlow(false)
-    val isKhaooGullyBannerEnabled = _isKhaooGullyBannerEnabled.asStateFlow()
     private val _isKhaooGullyUtilityEnabled = MutableStateFlow(false)
     val isKhaooGullyUtilityEnabled = _isKhaooGullyUtilityEnabled.asStateFlow()
     private val _ads = MutableStateFlow<List<EventOrAd>>(emptyList())
@@ -70,14 +69,13 @@ class HomeViewModel(
         viewModelScope.launch(dispatcher) {
             // feature_name values in the Supabase `feature_flag` table; missing row or error = hidden
             val flags = runCatching { homeRepository.getFeatureFlags() }.getOrDefault(emptyMap())
-            _isKhaooGullyBannerEnabled.value = flags["banner"] == true
             _isKhaooGullyUtilityEnabled.value = flags["utilities"] == true
         }
     }
 
     private fun fetchEventsAndAds() {
         viewModelScope.launch(dispatcher) {
-            runCatching { homeRepository.getEventsAndAds() }
+            runCatching { homeRepository.getEventsAndAds(if (isAndroid()) "android" else "ios") }
                 .onSuccess { list ->
                     println("Ads loaded: ${list.size}")
                     _ads.value = list

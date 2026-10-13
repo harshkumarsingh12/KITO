@@ -10,4 +10,6 @@ data class EventOrAd(
     val mediaType: String,
     val clickUrl: String?,
     val isAd: Boolean,
+    /** Lottie animation JSON, set only when [mediaType] is "lottie". */
+    val lottieJson: String? = null,
 )

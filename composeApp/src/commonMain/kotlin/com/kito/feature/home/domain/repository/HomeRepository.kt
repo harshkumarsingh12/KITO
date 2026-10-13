@@ -8,8 +8,8 @@ import com.kito.feature.home.domain.model.EventOrAd
  * Presentation never sees [EventAndAdModel] or [FeatureFlagModel].
  */
 interface HomeRepository {
-    /** Returns a shuffled list of active events and ads. */
-    suspend fun getEventsAndAds(): List<EventOrAd>
+    /** Returns a shuffled list of active events and ads for [platform] ("android" or "ios"). */
+    suspend fun getEventsAndAds(platform: String): List<EventOrAd>
 
     /** Returns the `feature_flag` table as feature_name -> isEnabled. */
     suspend fun getFeatureFlags(): Map<String, Boolean>

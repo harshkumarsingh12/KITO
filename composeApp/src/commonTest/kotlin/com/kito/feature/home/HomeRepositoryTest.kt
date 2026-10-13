@@ -12,7 +12,7 @@ class HomeRepositoryTest {
     @Test
     fun getEventsAndAds_returnsList() = runTest {
         val repo = FakeHomeRepository(events = listOf(eventOrAd(1L), eventOrAd(2L, isAd = true)))
-        val result = repo.getEventsAndAds()
+        val result = repo.getEventsAndAds("android")
         assertEquals(2, result.size)
         assertTrue(result[1].isAd)
     }

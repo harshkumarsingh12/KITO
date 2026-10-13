@@ -108,7 +108,11 @@ class FakeHomeRepository(
     private val events: List<EventOrAd> = emptyList(),
     private val featureFlags: Map<String, Boolean> = emptyMap(),
 ) : HomeRepository {
-    override suspend fun getEventsAndAds(): List<EventOrAd> = events
+    var requestedPlatform: String? = null
+    override suspend fun getEventsAndAds(platform: String): List<EventOrAd> {
+        requestedPlatform = platform
+        return events
+    }
     override suspend fun getFeatureFlags(): Map<String, Boolean> = featureFlags
 }
 

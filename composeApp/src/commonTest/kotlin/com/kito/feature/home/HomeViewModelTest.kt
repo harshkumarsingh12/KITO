@@ -97,26 +97,25 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun khaooGullyFlags_noRows_bothHidden() = runTest(testDispatcher) {
+    fun ads_requestedForCurrentPlatform() = runTest(testDispatcher) {
+        val repo = FakeHomeRepository()
+        vm(repo)
+        advanceUntilIdle()
+        // desktop test target is not Android
+        assertEquals("ios", repo.requestedPlatform)
+    }
+
+    @Test
+    fun khaooGullyUtilityFlag_noRows_hidden() = runTest(testDispatcher) {
         val v = vm(FakeHomeRepository())
         advanceUntilIdle()
-        assertFalse(v.isKhaooGullyBannerEnabled.value)
         assertFalse(v.isKhaooGullyUtilityEnabled.value)
     }
 
     @Test
-    fun khaooGullyFlags_bannerOnly_onlyBannerShown() = runTest(testDispatcher) {
-        val v = vm(FakeHomeRepository(featureFlags = mapOf("banner" to true, "utilities" to false)))
-        advanceUntilIdle()
-        assertTrue(v.isKhaooGullyBannerEnabled.value)
-        assertFalse(v.isKhaooGullyUtilityEnabled.value)
-    }
-
-    @Test
-    fun khaooGullyFlags_utilitiesOnly_onlyUtilityShown() = runTest(testDispatcher) {
+    fun khaooGullyUtilityFlag_enabled_shown() = runTest(testDispatcher) {
         val v = vm(FakeHomeRepository(featureFlags = mapOf("utilities" to true)))
         advanceUntilIdle()
-        assertFalse(v.isKhaooGullyBannerEnabled.value)
         assertTrue(v.isKhaooGullyUtilityEnabled.value)
     }
 

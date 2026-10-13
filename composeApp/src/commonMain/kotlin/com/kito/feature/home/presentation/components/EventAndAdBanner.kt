@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.kito.feature.home.domain.model.EventOrAd
@@ -57,7 +58,9 @@ fun EventAndAdBanner(
     }
 
     Column(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .testTag("events_banner"),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         HorizontalPager(
@@ -89,12 +92,20 @@ fun EventAndAdBanner(
                 }
             ) {
                 Box() {
-                    AsyncImage(
-                        model = eventOrAd.mediaUrl,
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                    )
+                    val lottieJson = eventOrAd.lottieJson
+                    if (lottieJson != null) {
+                        LottieBannerImage(
+                            json = lottieJson,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    } else {
+                        AsyncImage(
+                            model = eventOrAd.mediaUrl,
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
                     if (eventOrAd.isAd) {
                         Card(
                             modifier = Modifier
