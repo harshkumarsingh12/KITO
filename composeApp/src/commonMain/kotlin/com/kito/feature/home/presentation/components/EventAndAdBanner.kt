@@ -23,6 +23,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,6 +40,8 @@ import coil3.compose.AsyncImage
 import com.kito.feature.home.domain.model.EventOrAd
 import com.kito.feature.schedule.presentation.components.horizontalCarouselTransition
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeoutOrNull
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -49,11 +57,25 @@ fun EventAndAdBanner(
 
     val pagerState = rememberPagerState(pageCount = { eventsAndAds.size })
 
-    LaunchedEffect(eventsAndAds) {
+    // Lottie pages hold the carousel until one full play ends; image pages hold 3 s.
+    var finishedPage by remember { mutableIntStateOf(-1) }
+    var replay by remember { mutableIntStateOf(0) } // single-item carousel: replay the Lottie
+    LaunchedEffect(eventsAndAds, pagerState.settledPage) {
+        val page = pagerState.settledPage
+        val item = eventsAndAds.getOrNull(page) ?: return@LaunchedEffect
         while (true) {
-            delay(3000)
-            val next = (pagerState.currentPage + 1) % eventsAndAds.size
-            pagerState.animateScrollToPage(next)
+            if (item.lottieJson != null) {
+                finishedPage = -1
+                // ponytail: 30 s cap so a Lottie that never finishes can't freeze the carousel
+                withTimeoutOrNull(30_000) { snapshotFlow { finishedPage }.first { it == page } }
+            } else {
+                delay(3000)
+            }
+            if (eventsAndAds.size > 1) {
+                pagerState.animateScrollToPage((page + 1) % eventsAndAds.size)
+                break
+            }
+            replay++
         }
     }
 
@@ -94,10 +116,14 @@ fun EventAndAdBanner(
                 Box() {
                     val lottieJson = eventOrAd.lottieJson
                     if (lottieJson != null) {
-                        LottieBannerImage(
-                            json = lottieJson,
-                            modifier = Modifier.fillMaxSize()
-                        )
+                        key(replay) {
+                            LottieBannerImage(
+                                json = lottieJson,
+                                isPlaying = page == pagerState.settledPage,
+                                onFinished = { finishedPage = page },
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
                     } else {
                         AsyncImage(
                             model = eventOrAd.mediaUrl,
