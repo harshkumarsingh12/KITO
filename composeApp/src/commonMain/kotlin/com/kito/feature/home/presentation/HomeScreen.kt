@@ -54,7 +54,6 @@ fun HomeScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
     val eventsAndAds by viewmodel.ads.collectAsState()
     val isScheduleEmpty by viewmodel.isScheduleEmpty.collectAsState()
-    val isKhaooGullyBannerEnabled by viewmodel.isKhaooGullyBannerEnabled.collectAsState()
     val isKhaooGullyUtilityEnabled by viewmodel.isKhaooGullyUtilityEnabled.collectAsState()
     val scheduleUiState by scheduleViewModel.uiState.collectAsState()
 
@@ -127,7 +126,6 @@ fun HomeScreen(
         syncState = syncState,
         loginState = loginState,
         isScheduleEmpty = isScheduleEmpty,
-        isKhaooGullyBannerEnabled = isKhaooGullyBannerEnabled,
         isKhaooGullyUtilityEnabled = isKhaooGullyUtilityEnabled,
         eventsAndAds = eventsAndAds,
         kayaConnected = kayaConnected,
