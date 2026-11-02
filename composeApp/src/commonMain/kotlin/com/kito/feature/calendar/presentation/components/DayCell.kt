@@ -37,6 +37,9 @@ import kotlinx.datetime.LocalDate
 
 private const val MAX_CHIPS = 2
 
+/** Fixed so the month grid height is rows × this. */
+internal val DayCellHeight = 66.dp
+
 @Composable
 fun DayCell(
     date: LocalDate,
@@ -59,7 +62,7 @@ fun DayCell(
     )
     val background = when {
         pressed -> Color.White.copy(alpha = 0.08f)
-        isHoliday && inMonth -> Color(0xFF3FB68B).copy(alpha = 0.08f)
+        isHoliday && inMonth -> uiColors.accentOrangeEnd.copy(alpha = 0.08f)
         else -> Color.Transparent
     }
 
@@ -67,7 +70,7 @@ fun DayCell(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(2.dp),
         modifier = modifier
-            .height(66.dp)
+            .height(DayCellHeight)
             .graphicsLayer { scaleX = pressScale; scaleY = pressScale }
             .clip(RoundedCornerShape(10.dp))
             .background(background)

@@ -1,6 +1,10 @@
 package com.kito
 
 import android.content.Intent
+import java.io.File
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -29,7 +33,6 @@ import com.google.android.play.core.install.model.InstallStatus
 import com.google.android.play.core.install.model.UpdateAvailability
 import com.kito.core.auth.AndroidAuthDeepLink
 import com.kito.core.datastore.domain.repository.PrefsRepository
-import com.kito.core.platform.AppConfig
 import com.kito.core.platform.ESP
 import com.kito.core.platform.SecureStorage
 import com.kito.core.presentation.navigation3.Routes
@@ -79,7 +82,8 @@ class MainActivity : ComponentActivity() {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
         // Start reading the saved timetable now, so Home's first frame already has it (no empty card).
-        get<HomeViewModel>()
+        // Built off the main thread: resolving its dependency graph would otherwise delay the first frame.
+        lifecycleScope.launch(Dispatchers.Default) { get<HomeViewModel>() }
         enableEdgeToEdge(
             statusBarStyle = androidx.activity.SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
         )
@@ -93,17 +97,6 @@ class MainActivity : ComponentActivity() {
             fake.setUpdateAvailable(30)
             fake.setUpdatePriority(5)
         }
-        AppConfig.init(
-            portalBase = BuildConfig.PORTAL_BASE,
-            wdPath = BuildConfig.WD_PATH,
-            supabaseUrl = BuildConfig.SUPABASE_URL,
-            supabaseAnonKey = BuildConfig.SUPABASE_ANON_KEY,
-            isDebug = BuildConfig.DEBUG,
-            kgAPIKey = BuildConfig.KG_API_KEY,
-            kgBaseURL = BuildConfig.KG_BASE_URL,
-            cdnURL = BuildConfig.CDN_URL,
-            googleServerClientId = BuildConfig.GOOGLE_SERVER_CLIENT_ID
-        )
         setContent {
             var startDestination by remember { mutableStateOf<NavKey?>(null) }
             var deepLinkTarget by remember { mutableStateOf<String?>(null) }
@@ -119,14 +112,14 @@ class MainActivity : ComponentActivity() {
                     this@MainActivity.intent =
                         Intent(this@MainActivity, MainActivity::class.java)
                 }
-                val espPass = eSP.getSapPassword()
-                if (espPass.isNotEmpty()){
-                    secureStorage.saveSapPassword(espPass)
-                    eSP.clearSapPassword()
+                // Legacy EncryptedSharedPreferences: opening it costs ~250ms of Keystore work while the
+                // splash is up, so only touch it while its file exists, and delete it once migrated.
+                if (File(applicationInfo.dataDir, "shared_prefs/secure_prefs.xml").exists()) {
+                    val espPass = eSP.getSapPassword()
+                    if (espPass.isEmpty() || secureStorage.saveSapPassword(espPass)) {
+                        deleteSharedPreferences("secure_prefs")
+                    }
                 }
-                val encryptedPassword = secureStorage.getSapPassword()
-                val isLoggedIn = secureStorage.isLoggedInFlow.first()
-                notificationPipelineController.sync()
                 val onboardingDone = prefs.onBoardingFlow.first()
                 val isUserSetupDone = prefs.userSetupDoneFlow.first()
                 startDestination = when {
@@ -135,6 +128,8 @@ class MainActivity : ComponentActivity() {
                     else -> Routes.Tabs
                 }
                 isReady = true
+                // Re-arming class alarms isn't needed for the first frame; do it after, off the main thread.
+                lifecycleScope.launch(Dispatchers.Default) { notificationPipelineController.sync() }
             }
 
             // Handle new intents (e.g., if activity is singleTop)
