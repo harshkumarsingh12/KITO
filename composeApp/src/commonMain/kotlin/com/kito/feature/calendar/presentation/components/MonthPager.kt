@@ -1,6 +1,7 @@
 package com.kito.feature.calendar.presentation.components
 
 import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -18,6 +19,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -117,7 +119,15 @@ fun MonthPager(
     ) {
         WeekdayHeaderRow()
         Spacer(Modifier.height(6.dp))
-        HorizontalPager(state = pagerState, beyondViewportPageCount = 1) { page ->
+        // Months need 4–6 rows: the grid follows the month on screen instead of the tallest loaded one.
+        val rows = buildMonthCells(firstIndex + pagerState.currentPage).size / 7
+        val gridHeight by animateDpAsState(DayCellHeight * rows, label = "gridHeight")
+        HorizontalPager(
+            state = pagerState,
+            beyondViewportPageCount = 1,
+            verticalAlignment = Alignment.Top,
+            modifier = Modifier.height(gridHeight),
+        ) { page ->
             val index = firstIndex + page
             MonthGrid(
                 monthIndex = index,
